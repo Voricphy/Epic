@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+  'https://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+<mapper namespace="com.gridcharge.mapper.StationMapper">
+    <select id="findById" resultType="Station">SELECT * FROM tb_station WHERE id=#{id}</select>
+    <select id="lockById" resultType="Station">SELECT * FROM tb_station WHERE id=#{id} FOR UPDATE</select>
+    <sql id="filter">
+        <where>
+            <if test="name != null and name != ''">name LIKE CONCAT('%',#{name},'%')</if>
+        </where>
+    </sql>
+    <select id="page" resultType="Station">
+        SELECT * FROM tb_station 
+        <include refid="filter"/>
+         ORDER BY id DESC LIMIT #{size} OFFSET #{offset}
+    </select>
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM tb_station 
+        <include refid="filter"/>
+    </select>
+    <select id="all" resultType="Station">SELECT * FROM tb_station ORDER BY id</select>
+    <select id="idsAfter" resultType="long">SELECT id FROM tb_station WHERE id&gt;#{after} ORDER BY id LIMIT 1000</select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO tb_station(name,address,longitude,latitude,max_power_kw,pile_count,status) VALUES(#{name},#{address},#{longitude},#{latitude},#{maxPowerKw},#{pileCount},#{status})</insert>
+    <update id="update">UPDATE tb_station SET name=#{name},address=#{address},longitude=#{longitude},latitude=#{latitude},max_power_kw=#{maxPowerKw},pile_count=#{pileCount},status=#{status} WHERE id=#{id}</update>
+    <delete id="delete">DELETE FROM tb_station WHERE id=#{id}</delete>
+    <select id="countSlots" resultType="int">SELECT COUNT(*) FROM tb_station_slot WHERE station_id=#{id}</select>
+</mapper>

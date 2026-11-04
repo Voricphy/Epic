@@ -1,0 +1,13 @@
+**/target/
+.idea/
+*.iml
+.env
+*.log
+.m2/
+.runtime/
+tools/__pycache__/
+.local-only/
+.agents/
+.gemini/
+.env.*
+!.env.example

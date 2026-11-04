@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'https://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+<mapper namespace="com.gridcharge.mapper.AdminCancellationMailMapper">
+    <!-- 在取消前保存邮箱、时段和原订单状态；只选择本次待取消的有效订单。 -->
+    <insert id="enqueueActive">
+        INSERT INTO tb_admin_cancellation_mail
+            (reservation_id,recipient,station_name,start_time,end_time,previous_status)
+        SELECT r.id,u.email,s.name,sl.start_time,sl.end_time,r.status
+        FROM tb_reservation r
+        JOIN tb_user u ON u.id=r.user_id
+        JOIN tb_station_slot sl ON sl.id=r.slot_id
+        JOIN tb_station s ON s.id=sl.station_id
+        WHERE r.slot_id=#{slotId} AND r.status IN ('SUCCESS','PROCESSING')
+    </insert>
+    <select id="dueIds" resultType="long">
+        SELECT reservation_id FROM tb_admin_cancellation_mail
+        WHERE status='PENDING' AND next_attempt_at&lt;=NOW(3)
+        ORDER BY next_attempt_at,reservation_id LIMIT 20
+    </select>
+    <select id="findDue" resultType="AdminCancellationMail">
+        SELECT * FROM tb_admin_cancellation_mail
+        WHERE reservation_id=#{reservationId} AND status='PENDING' AND next_attempt_at&lt;=NOW(3)
+    </select>
+    <update id="markSent">
+        UPDATE tb_admin_cancellation_mail SET status='SENT',attempts=attempts+1,sent_at=NOW(3),last_error=NULL
+        WHERE reservation_id=#{reservationId} AND status='PENDING'
+    </update>
+    <update id="retryLater">
+        UPDATE tb_admin_cancellation_mail SET attempts=attempts+1,next_attempt_at=#{nextAttemptAt},last_error=#{error}
+        WHERE reservation_id=#{reservationId} AND status='PENDING'
+    </update>
+</mapper>

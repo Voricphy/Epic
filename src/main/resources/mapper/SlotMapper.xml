@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+  'https://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+<mapper namespace="com.gridcharge.mapper.SlotMapper">
+    <select id="findById" resultType="StationSlot">SELECT * FROM tb_station_slot WHERE id=#{id}</select>
+    <select id="lockById" resultType="StationSlot">SELECT * FROM tb_station_slot WHERE id=#{id} FOR UPDATE</select>
+    <select id="list" resultType="StationSlot">SELECT * FROM tb_station_slot WHERE station_id=#{stationId} AND end_time&gt;NOW(3) ORDER BY start_time LIMIT 500</select>
+    <select id="recoveryIds" resultType="long">SELECT s.id FROM tb_station_slot s WHERE s.id&gt;#{after} AND (s.end_time&gt;DATE_SUB(NOW(3),INTERVAL 1 DAY) OR EXISTS(SELECT 1 FROM tb_reservation r WHERE r.slot_id=s.id AND r.status='PROCESSING')) ORDER BY s.id LIMIT 100</select>
+    <select id="overlaps" resultType="int">SELECT COUNT(*) FROM tb_station_slot WHERE station_id=#{stationId} AND start_time &lt; #{end} AND end_time &gt; #{start}</select>
+    <select id="capacityViolations" resultType="int">SELECT COUNT(*) FROM tb_station_slot WHERE station_id=#{stationId} AND end_time&gt;NOW(3) AND (quota&gt;#{pileCount} OR quota*power_per_car_kw&gt;#{maxPowerKw})</select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">INSERT INTO tb_station_slot(station_id,start_time,end_time,quota,reserved,power_per_car_kw,price,status) VALUES(#{stationId},#{startTime},#{endTime},#{quota},0,#{powerPerCarKw},#{price},1)</insert>
+    <update id="reserve">UPDATE tb_station_slot SET reserved=reserved+1 WHERE id=#{id} AND reserved &lt; quota AND status=1 AND start_time&gt;NOW(3)</update>
+    <update id="release">UPDATE tb_station_slot SET reserved=reserved-1 WHERE id=#{id} AND reserved&gt;0</update>
+    <update id="close">UPDATE tb_station_slot SET status=0 WHERE id=#{id}</update>
+    <update id="open">UPDATE tb_station_slot SET status=1 WHERE id=#{id} AND status=0 AND start_time&gt;NOW(3)</update>
+    <update id="clearReserved">UPDATE tb_station_slot SET reserved=0 WHERE id=#{id}</update>
+</mapper>

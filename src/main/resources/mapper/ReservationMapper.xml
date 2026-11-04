@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+  'https://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+<mapper namespace="com.gridcharge.mapper.ReservationMapper">
+    <select id="findById" resultType="Reservation">SELECT * FROM tb_reservation WHERE id=#{id}</select>
+    <select id="lockById" resultType="Reservation">SELECT * FROM tb_reservation WHERE id=#{id} FOR UPDATE</select>
+    <select id="findRequest" resultType="Reservation">SELECT * FROM tb_reservation WHERE user_id=#{userId} AND request_id=#{requestId}</select>
+    <select id="activeForUser" resultType="Reservation">SELECT * FROM tb_reservation WHERE user_id=#{userId} AND slot_id=#{slotId} AND status IN ('PROCESSING','SUCCESS')</select>
+    <insert id="insert">INSERT INTO tb_reservation(id,user_id,slot_id,request_id,status) VALUES(#{id},#{userId},#{slotId},#{requestId},'PROCESSING')</insert>
+    <update id="transition">UPDATE tb_reservation SET status=#{to},failure_reason=#{reason} WHERE id=#{id} AND status=#{from}</update>
+    <select id="active" resultType="Reservation">SELECT * FROM tb_reservation WHERE slot_id=#{slotId} AND status IN ('PROCESSING','SUCCESS') ORDER BY id</select>
+    <update id="cancelActiveBySlot">UPDATE tb_reservation SET status='CANCELLED',failure_reason='管理员取消该时段预约' WHERE slot_id=#{slotId} AND status IN ('PROCESSING','SUCCESS')</update>
+    <select id="list" resultType="Reservation">SELECT * FROM tb_reservation WHERE user_id=#{userId} ORDER BY id DESC LIMIT #{size} OFFSET #{offset}</select>
+    <select id="count" resultType="long">SELECT COUNT(*) FROM tb_reservation WHERE user_id=#{userId}</select>
+    <select id="ranking" resultType="com.gridcharge.vo.RankingVO">SELECT s.id station_id,s.name station_name,COUNT(*) reservations FROM tb_reservation r JOIN tb_station_slot sl ON r.slot_id=sl.id JOIN tb_station s ON sl.station_id=s.id WHERE r.status='SUCCESS' AND r.create_time&gt;=#{start} AND r.create_time &lt; #{end} GROUP BY s.id,s.name ORDER BY reservations DESC,s.id</select>
+</mapper>

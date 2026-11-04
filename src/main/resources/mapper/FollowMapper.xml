@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+  'https://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+<mapper namespace="com.gridcharge.mapper.FollowMapper">
+    <insert id="insert">INSERT IGNORE INTO tb_station_follow(user_id,station_id) VALUES(#{userId},#{stationId})</insert>
+    <delete id="delete">DELETE FROM tb_station_follow WHERE user_id=#{userId} AND station_id=#{stationId}</delete>
+    <select id="stations" resultType="long">SELECT station_id FROM tb_station_follow WHERE user_id=#{userId} ORDER BY station_id</select>
+    <select id="followers" resultType="long">SELECT user_id FROM tb_station_follow WHERE station_id=#{stationId}</select>
+    <select id="feed" resultType="StationSlot">SELECT s.* FROM tb_station_slot s JOIN tb_station_follow f ON f.station_id=s.station_id WHERE f.user_id=#{userId} AND s.create_time&gt;=f.create_time AND s.create_time&gt;=DATE_SUB(NOW(3),INTERVAL 30 DAY) ORDER BY s.create_time DESC,s.id DESC LIMIT 1000</select>
+</mapper>

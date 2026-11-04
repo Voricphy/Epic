@@ -1,0 +1,87 @@
+epic:
+  station-bloom:
+    expected-insertions: ${STATION_BLOOM_EXPECTED_INSERTIONS:100000}
+    false-probability: ${STATION_BLOOM_FALSE_PROBABILITY:0.01}
+  id:
+    # 两项均为 0~31；每个运行实例的编号组合必须唯一。
+    worker-id: ${SNOWFLAKE_WORKER_ID:0}
+    datacenter-id: ${SNOWFLAKE_DATACENTER_ID:0}
+  admin:
+    email: ${ADMIN_EMAIL:admin@gridcharge.local}
+    password: ${ADMIN_PASSWORD:}
+    cancellation-mail:
+      enabled: ${ADMIN_CANCELLATION_MAIL_ENABLED:true}
+      poll-ms: ${ADMIN_CANCELLATION_MAIL_POLL_MS:10000}
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8080}
+spring:
+  application:
+    name: epic-learning
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:epic_learning}?useUnicode=true&characterEncoding=utf8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:}
+    hikari:
+      maximum-pool-size: 16
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3s
+  sql:
+    init:
+      mode: never
+  jackson:
+    time-zone: Asia/Shanghai
+  mail:
+    host: ${SMTP_HOST:smtp.qq.com}
+    port: ${SMTP_PORT:465}
+    username: ${SMTP_USERNAME:}
+    # QQ 邮箱 SMTP 授权码，不是 QQ 登录密码。
+    password: ${SMTP_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+      mail.smtp.ssl.checkserveridentity: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    group: epic-reservation-producer
+    send-message-timeout: 3000
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.gridcharge.entity
+  configuration:
+    map-underscore-to-camel-case: true
+management:
+  health:
+    redis:
+      enabled: false
+    db:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+logging:
+  level:
+    com.gridcharge: info
+    com.gridcharge.mapper: debug
+    com.gridcharge.mapper.AdminCancellationMailMapper: INFO
